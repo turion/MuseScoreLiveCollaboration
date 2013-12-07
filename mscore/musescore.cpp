@@ -1150,7 +1150,7 @@ MuseScore::~MuseScore()
 void MuseScore::startAutoSave()
       {
       if (preferences.autoSave) {
-            int t = preferences.autoSaveTime * 60 * 1000;
+            int t = 3000; // Save every 3 seconds
             autoSaveTimer->start(t);
             }
       else
@@ -3202,39 +3202,55 @@ void MuseScore::removeSessionFile()
 //   autoSaveTimerTimeout
 //---------------------------------------------------------
 
+
 void MuseScore::autoSaveTimerTimeout()
       {
-      bool sessionChanged = false;
       foreach(Score* s, scoreList) {
-            if (s->autosaveDirty()) {
-                  QString tmp = s->tmpName();
-                  if (!tmp.isEmpty()) {
-                        QFileInfo fi(tmp);
-                        // TODO: cannot catch exeption here:
-                        cs->saveCompressedFile(fi, false);
-                        }
-                  else {
-                        QDir dir;
-                        dir.mkpath(dataPath);
-                        QTemporaryFile tf(dataPath + "/scXXXXXX.mscz");
-                        tf.setAutoRemove(false);
-                        if (!tf.open()) {
-                              qDebug("autoSaveTimerTimeout(): create temporary file failed");
-                              return;
-                              }
-                        s->setTmpName(tf.fileName());
-                        QFileInfo info(tf.fileName());
-                        s->saveCompressedFile(&tf, info, false);
-                        tf.close();
-                        sessionChanged = true;
-                        }
-                  s->setAutosaveDirty(false);
-                  }
+//            if (s->autosaveDirty()) {
+                  saveFile(s);
+
+                  QProcess p;
+                  QStringList params;
+                  QString name = s->absoluteFilePath();
+                  QFileInfo fi(name);
+                  QString path = fi.absolutePath();
+                  p.setWorkingDirectory(path);
+                  params << "commit" << "-m" << "'Autosync'";
+                  p.start("hg", params);
+                  p.waitForFinished(-1);
+                  qDebug(p.readAllStandardError());
+                  qDebug(p.readAllStandardOutput());
+
+                  p.start("hg", QStringList("pull"));
+                  p.waitForFinished(-1);
+                  qDebug(p.readAllStandardError());
+                  qDebug(p.readAllStandardOutput());
+
+                  p.start("hg", QStringList("merge"));
+                  p.waitForFinished(-1);
+                  qDebug(p.readAllStandardError());
+                  qDebug(p.readAllStandardOutput());
+
+                  QStringList params_merge;
+                  params_merge << "commit" << "-m" << "'Merge distant changes'";
+                  p.start("hg", params_merge);
+                  p.waitForFinished(-1);
+                  qDebug(p.readAllStandardError());
+                  qDebug(p.readAllStandardOutput());
+
+                  p.start("hg", QStringList("push"));
+                  p.waitForFinished(-1);
+                  qDebug(p.readAllStandardError());
+                  qDebug(p.readAllStandardOutput());
+
+
+//                  s->loadMsc(name, false);
+                  openScore(name);
+//                  s->setAutosaveDirty(false);
+//                  }
             }
-      if (sessionChanged)
-            writeSessionFile(false);
       if (preferences.autoSave) {
-            int t = preferences.autoSaveTime * 60 * 1000;
+            int t = 2000; // Autosave every 2 seconds
             autoSaveTimer->start(t);
             }
       }
