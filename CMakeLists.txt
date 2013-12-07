@@ -179,17 +179,7 @@ endif (APPLE OR MINGW)
 ## pulseaudio
 ##
 
-if (APPLE OR MINGW)
-      set (USE_PULSEAUDIO 0)
-else (APPLE OR MINGW)
-      if (PULSEAUDIO_FOUND)
-            set(USE_PULSEAUDIO 1)
-            message("Pulseaudio found.")
-      else (PULSEAUDIO_FOUND)
-            set(USE_PULSEAUDIO 0)
-            message("Pulseaudio not found.")
-      endif (PULSEAUDIO_FOUND)
-endif (APPLE OR MINGW)
+set (USE_PULSEAUDIO 0)
 
 
 ##
