@@ -3206,48 +3206,15 @@ void MuseScore::removeSessionFile()
 void MuseScore::autoSaveTimerTimeout()
       {
       foreach(Score* s, scoreList) {
-//            if (s->autosaveDirty()) {
+            if (s->autosaveDirty()) {
                   saveFile(s);
 
-                  QProcess p;
-                  QStringList params;
                   QString name = s->absoluteFilePath();
-                  QFileInfo fi(name);
-                  QString path = fi.absolutePath();
-                  p.setWorkingDirectory(path);
-                  params << "commit" << "-m" << "'Autosync'";
-                  p.start("hg", params);
-                  p.waitForFinished(-1);
-                  qDebug(p.readAllStandardError());
-                  qDebug(p.readAllStandardOutput());
-
-                  p.start("hg", QStringList("pull"));
-                  p.waitForFinished(-1);
-                  qDebug(p.readAllStandardError());
-                  qDebug(p.readAllStandardOutput());
-
-                  p.start("hg", QStringList("merge"));
-                  p.waitForFinished(-1);
-                  qDebug(p.readAllStandardError());
-                  qDebug(p.readAllStandardOutput());
-
-                  QStringList params_merge;
-                  params_merge << "commit" << "-m" << "'Merge distant changes'";
-                  p.start("hg", params_merge);
-                  p.waitForFinished(-1);
-                  qDebug(p.readAllStandardError());
-                  qDebug(p.readAllStandardOutput());
-
-                  p.start("hg", QStringList("push"));
-                  p.waitForFinished(-1);
-                  qDebug(p.readAllStandardError());
-                  qDebug(p.readAllStandardOutput());
 
 
-//                  s->loadMsc(name, false);
                   openScore(name);
 //                  s->setAutosaveDirty(false);
-//                  }
+                  }
             }
       if (preferences.autoSave) {
             int t = 2000; // Autosave every 2 seconds

@@ -429,6 +429,8 @@ class Score : public QObject {
       qreal cautionaryWidth(Measure* m);
       void createPlayEvents();
 
+      void liveSync();
+
    protected:
       void createPlayEvents(Chord*);
       SynthesizerState _synthesizerState;

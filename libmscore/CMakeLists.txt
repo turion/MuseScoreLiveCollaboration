@@ -79,6 +79,7 @@ add_library (
       synthesizerstate.cpp mcursor.cpp groups.cpp mscoreview.cpp
       noteline.cpp spannermap.cpp
       bagpembell.cpp ambitus.cpp
+      live.cpp
       )
 if (SCRIPT_INTERFACE)
    set_target_properties (
