@@ -3206,14 +3206,19 @@ void MuseScore::removeSessionFile()
 void MuseScore::autoSaveTimerTimeout()
       {
       foreach(Score* s, scoreList) {
+            QFileInfo fi(s->absoluteFilePath());
+            QString path = fi.absolutePath();
+            s->local.setWorkingDirectory(path);
+            s->push.setWorkingDirectory(path);
+            s->pull.setWorkingDirectory(path);
             if (s->autosaveDirty()) {
                   saveFile(s);
-
-                  QString name = s->absoluteFilePath();
-
-
-                  openScore(name);
+                  s->liveCommit();
 //                  s->setAutosaveDirty(false);
+                  }
+            if(s->liveSync()) {
+                  QString name = s->absoluteFilePath();
+                  openScore(name);
                   }
             }
       if (preferences.autoSave) {

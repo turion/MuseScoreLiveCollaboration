@@ -68,6 +68,7 @@
 #include "cursor.h"
 #include "sym.h"
 
+
 namespace Ms {
 
 Score* gscore;                 ///< system score, used for palettes etc.
@@ -251,6 +252,8 @@ void Score::init()
       l.tags          = 1;
       _layer.append(l);
       _layerTags[0]   = "default";
+      liveState       = LIVE_IDLE;
+
 
       if (!_parentScore) {
 #ifdef Q_OS_WIN

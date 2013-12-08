@@ -15,6 +15,7 @@
  sync score for live collaborative editing
 */
 
+#include <QProcess>
 #include "score.h"
 
 
@@ -26,41 +27,79 @@ namespace Ms {
 //    sync score with hg repo
 //---------------------------------------------------------
 
-void Score::liveSync()
+
+
+void Score::liveCommit()
 {
-      QProcess p;
       QStringList params;
-      QString name = absoluteFilePath();
-      QFileInfo fi(name);
-      QString path = fi.absolutePath();
-      p.setWorkingDirectory(path);
       params << "commit" << "-m" << "'Autosync'";
-      p.start("hg", params);
-      p.waitForFinished(-1);
-      qDebug(p.readAllStandardError());
-      qDebug(p.readAllStandardOutput());
+      local.start("hg", params);
+      local.waitForFinished(-1);
+      qDebug(local.readAllStandardError());
+      qDebug(local.readAllStandardOutput());
+}
 
-      p.start("hg", QStringList("pull"));
-      p.waitForFinished(-1);
-      qDebug(p.readAllStandardError());
-      qDebug(p.readAllStandardOutput());
+void Score::livePull()
+{
+      pull.start("hg", QStringList("pull"));
+//      pull.waitForFinished(-1);
+      qDebug(pull.readAllStandardError());
+      qDebug(pull.readAllStandardOutput());
+}
 
-      p.start("hg", QStringList("merge"));
-      p.waitForFinished(-1);
-      qDebug(p.readAllStandardError());
-      qDebug(p.readAllStandardOutput());
+void Score::liveMerge()
+{
+      local.start("hg", QStringList("merge"));
+      local.waitForFinished(-1);
+      qDebug(local.readAllStandardError());
+      qDebug(local.readAllStandardOutput());
+
+      local.start("hg", QStringList("update"));
+      local.waitForFinished(-1);
+      qDebug(local.readAllStandardError());
+      qDebug(local.readAllStandardOutput());
 
       QStringList params_merge;
       params_merge << "commit" << "-m" << "'Merge distant changes'";
-      p.start("hg", params_merge);
-      p.waitForFinished(-1);
-      qDebug(p.readAllStandardError());
-      qDebug(p.readAllStandardOutput());
+      local.start("hg", params_merge);
+      local.waitForFinished(-1);
+      qDebug(local.readAllStandardError());
+      qDebug(local.readAllStandardOutput());
+}
 
-      p.start("hg", QStringList("push"));
-      p.waitForFinished(-1);
-      qDebug(p.readAllStandardError());
-      qDebug(p.readAllStandardOutput());
+void Score::livePush()
+{
+      push.start("hg", QStringList("push"));
+//      push.waitForFinished(-1);
+      qDebug(push.readAllStandardError());
+      qDebug(push.readAllStandardOutput());
+}
+
+bool Score::liveSync() // currently doesn't timeout hanging pulls/pushes
+{
+      bool receivedChanges = false;
+      switch(liveState) {
+            case LIVE_IDLE:
+                  livePull();
+                  liveState = LIVE_PULLING;
+            case LIVE_PULLING:
+                  if(pull.state() == QProcess::NotRunning) {
+                        liveState = LIVE_PULLED;
+                        }
+                  else {
+                        break;
+                        }
+            case LIVE_PULLED:
+                  liveMerge();
+                  livePush();
+                  liveState = LIVE_PUSHING;
+            case LIVE_PUSHING:
+                  if(push.state() == QProcess::NotRunning) {
+                        liveState = LIVE_IDLE;
+                        receivedChanges = true;
+                        }
+                  }
+      return receivedChanges;
 }
 
 

@@ -251,6 +251,13 @@ class Score : public QObject {
             FILE_TOO_NEW,
             FILE_USER_ABORT
             };
+      enum LiveState {
+            LIVE_IDLE,
+            LIVE_PULLING,
+            LIVE_PULLED,
+            LIVE_PUSHING
+            };
+      QProcess pull, push, local;
 
    private:
       int _linkId;
@@ -363,6 +370,8 @@ class Score : public QObject {
 
       qreal _noteHeadWidth;
 
+      LiveState liveState;
+
       //------------------
 
       ChordRest* nextMeasure(ChordRest* element, bool selectBehavior = false);
@@ -429,7 +438,9 @@ class Score : public QObject {
       qreal cautionaryWidth(Measure* m);
       void createPlayEvents();
 
-      void liveSync();
+      void livePull();
+      void livePush();
+      void liveMerge();
 
    protected:
       void createPlayEvents(Chord*);
@@ -958,6 +969,9 @@ class Score : public QObject {
       ScoreFont* scoreFont() const    { return _scoreFont; }
       void setScoreFont(ScoreFont* f) { _scoreFont = f;    }
       qreal noteHeadWidth() const            { return _noteHeadWidth; }
+
+      bool liveSync();
+      void liveCommit();
 
       friend class ChangeSynthesizerState;
       friend class Chord;
